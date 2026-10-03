@@ -86,7 +86,12 @@ nullaway {
 }
 
 tasks.compileJava {
-    options.forkOptions.jvmArgs = ["-Xmx8192m", "--enable-native-access=ALL-UNNAMED"]
+	options.compilerArgs.addAll([
+			'--enable-preview'
+	])
+
+	options.fork = true
+	options.forkOptions.jvmArgs = ["-Xmx8192m", "--enable-native-access=ALL-UNNAMED"]
 }
 
 tasks.withType(Javadoc).configureEach {
@@ -103,6 +108,7 @@ tasks.withType(Javadoc).configureEach {
 tasks.withType(JavaExec).configureEach {
 	jvmArgs = ["-Xmx8192m",
 			   "--enable-native-access=ALL-UNNAMED",
+			   "--enable-preview",
 			   "-ea"]
 
 	println()
