@@ -28,6 +28,8 @@ package net.jmp.demo.java27;
  * SOFTWARE.
  */
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +44,13 @@ final class LazyConstants {
     /// The string validator is a lazy constant.
     private final LazyConstant<StringValidator> stringValidator = LazyConstant.of(this::createStringValidator);
 
+    /// A lazy list of 100 square roots, each evaluated only when selected
+    private final List<Double> squareRoots = List.ofLazy(100, i -> {
+        this.logger.info("Initializing list element at index {}", i);
+
+        return Math.sqrt(i);
+    });
+
     /// The default constructor.
     LazyConstants() {
         super();
@@ -54,13 +63,14 @@ final class LazyConstants {
         }
 
         this.stringValidation();
+        this.lists();
 
         if (this.logger.isTraceEnabled()) {
             this.logger.trace(exit());
         }
     }
 
-    /// Demonstrate string validation.
+    /// Demonstrate lazy string validation.
     private void stringValidation() {
         if (this.logger.isTraceEnabled()) {
             this.logger.trace(entry());
@@ -83,7 +93,26 @@ final class LazyConstants {
         }
     }
 
-    /// Create a new string validator.
+    /// Demonstrate lazy lists.
+    private void lists() {
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace(entry());
+        }
+
+        this.logger.info("squareRoots[0]    = {}", this.squareRoots.get(0));
+        this.logger.info("squareRoots[1]    = {}", this.squareRoots.get(1));
+        this.logger.info("squareRoots[2]    = {}", this.squareRoots.get(2));
+        this.logger.info("squareRoots[0]    = {}", this.squareRoots.get(0));
+        this.logger.info("squareRoots.first = {}", this.squareRoots.getFirst());
+        this.logger.info("squareRoots.last  = {}", this.squareRoots.getLast());
+
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace(exit());
+        }
+    }
+
+    /// Create a new string validator. Called the first
+    /// time a get() is invoked on the lazy constant.
     ///
     /// @return net.jmp.demo.java27.LazyConstants.StringValidator
     private StringValidator createStringValidator() {
