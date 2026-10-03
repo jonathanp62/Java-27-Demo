@@ -53,12 +53,29 @@ final class LazyConstants {
             this.logger.trace(entry());
         }
 
+        this.stringValidation();
+
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace(exit());
+        }
+    }
+
+    /// Demonstrate string validation.
+    private void stringValidation() {
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace(entry());
+        }
+
         if (this.stringValidator.get().isStringValid("Hello")) {
             this.logger.info("Hello is valid!");
         }
 
         if (!this.stringValidator.get().isStringValid(" ")) {
             this.logger.info("<Blank> is not valid!");
+        }
+
+        if (!this.stringValidator.get().isStringValid("")) {
+            this.logger.info("<Empty> is not valid!");
         }
 
         if (this.logger.isTraceEnabled()) {
