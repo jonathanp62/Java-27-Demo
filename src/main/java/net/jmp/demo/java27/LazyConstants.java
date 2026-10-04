@@ -28,13 +28,16 @@ package net.jmp.demo.java27;
  * SOFTWARE.
  */
 
+import java.math.BigDecimal;
+
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static net.jmp.util.logging.LoggerUtils.entry;
-import static net.jmp.util.logging.LoggerUtils.exit;
+import static net.jmp.util.logging.LoggerUtils.*;
 
 /// The lazy constants class.
 final class LazyConstants {
@@ -51,6 +54,12 @@ final class LazyConstants {
         return Math.sqrt(i);
     });
 
+    /// A lazy map of exchange rates.
+    private final Map<String, BigDecimal> exchangeRates = Map.ofLazy(
+            Set.of("USD", "GBP", "JPY", "CHF"),
+            this::fetchExchangeRate
+    );
+
     /// The default constructor.
     LazyConstants() {
         super();
@@ -64,6 +73,8 @@ final class LazyConstants {
 
         this.stringValidation();
         this.lists();
+        this.maps();
+        this.sets();
 
         if (this.logger.isTraceEnabled()) {
             this.logger.trace(exit());
@@ -109,6 +120,56 @@ final class LazyConstants {
         if (this.logger.isTraceEnabled()) {
             this.logger.trace(exit());
         }
+    }
+
+    /// Demonstrate lazy maps.
+    private void maps() {
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace(entry());
+        }
+
+        for (final Map.Entry<String, BigDecimal> entry : this.exchangeRates.entrySet()) {
+            this.logger.info("The exchange for {} is {}", entry.getKey(), entry.getValue());
+        }
+
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace(exit());
+        }
+    }
+
+    /// Demonstrate the lazy sets.
+    private void sets() {
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace(entry());
+        }
+
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace(exit());
+        }
+    }
+
+    /// Fetch the exchange rate based on the currency.
+    ///
+    /// @param  currency    java.lang.String
+    /// @return             java.math.BigDecimal
+    private BigDecimal fetchExchangeRate(final String currency) {
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace(entry());
+        }
+
+        final BigDecimal result = switch (currency) {
+            case "USD" -> new BigDecimal("1.00");
+            case "GBP" -> new BigDecimal("0.7552");
+            case "JPY" -> new BigDecimal("157.85");
+            case "CHF" -> new BigDecimal("0.8288");
+            default    -> BigDecimal.ONE;
+        };
+
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace(exitWith(result));
+        }
+
+        return result;
     }
 
     /// Create a new string validator. Called the first
