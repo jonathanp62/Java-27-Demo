@@ -60,6 +60,12 @@ final class LazyConstants {
             this::fetchExchangeRate
     );
 
+    /// A lazy set of enabled features.
+    private final Set<String> enabledFeatures = Set.ofLazy(
+            Set.of("dark-mode", "beta-export", "ai-assistant", "live-collab"),
+            this::isFeatureEnabled
+    );
+
     /// The default constructor.
     LazyConstants() {
         super();
@@ -143,6 +149,24 @@ final class LazyConstants {
             this.logger.trace(entry());
         }
 
+        if (this.enabledFeatures.contains("ai-assistant")) {
+            this.logger.info("Feature ai-assistant is enabled");
+        }
+
+        if (this.enabledFeatures.contains("beta-export")) {
+            this.logger.info("Feature beta-export is enabled");
+        }
+
+        if (this.enabledFeatures.contains("dark-mode")) {
+            this.logger.info("Feature dark-mode is enabled");
+        }
+
+        if (this.enabledFeatures.contains("live-collab")) {
+            this.logger.info("Feature live-collab is enabled");
+        }
+
+        this.enabledFeatures.forEach(this.logger::info);
+
         if (this.logger.isTraceEnabled()) {
             this.logger.trace(exit());
         }
@@ -163,6 +187,30 @@ final class LazyConstants {
             case "JPY" -> new BigDecimal("157.85");
             case "CHF" -> new BigDecimal("0.8288");
             default    -> BigDecimal.ONE;
+        };
+
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace(exitWith(result));
+        }
+
+        return result;
+    }
+
+    /// Return true if the feature is enabled.
+    ///
+    /// @param  name    java.lang.String
+    /// @return         boolean
+    private boolean isFeatureEnabled(final String name) {
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace(entryWith(name));
+        }
+
+        final boolean result = switch (name) {
+            case "ai-assistant" -> false;
+            case "beta-export"  -> true;
+            case "dark-mode"    -> true;
+            case "live-collab"  -> true;
+            default             -> false;
         };
 
         if (this.logger.isTraceEnabled()) {
