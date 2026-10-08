@@ -42,6 +42,7 @@ plugins {
 	id 'net.jmp.gradle.plugin.projectinfo-info'	version '0.3.0'
 	id 'net.ltgt.errorprone'					version '4.2.0'
 	id 'net.ltgt.nullaway'						version '2.3.0'
+	id 'org.owasp.dependencycheck'				version '13.0.0'
 }
 
 apply plugin: 'net.jmp.gradle.plugin.projectinfo-info'
@@ -64,6 +65,12 @@ java {
 repositories {
 	mavenLocal()
 	mavenCentral()
+}
+
+dependencyCheck {
+nvd {
+        apiKey = providers.environmentVariable("NVD_API_KEY").getOrNull()
+    }
 }
 
 dependencies {
