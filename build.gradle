@@ -68,8 +68,44 @@ repositories {
 }
 
 dependencyCheck {
-nvd {
+	scanConfigurations = ['runtimeClasspath']
+
+    analyzers {
+        // --- Core File Analyzers ---
+        archiveEnabled = false           // Skips zip/tar extraction
+        jarEnabled = true                // Keeps standard Java JAR inspection ON
+        centralEnabled = false           // Skips querying Maven Central API for missing metadata
+        
+        // --- Non-JVM Analyzers (Explicitly Disabled) ---
+        assemblyEnabled = false          // .NET assemblies
+        msbuildEnabled = false           // MSBuild
+        nuspecEnabled = false            // NuGet
+        
+        pyDistributionEnabled = false    // Python distribution files (.whl, .egg)
+        pyPackageEnabled = false         // Python requirements.txt / setup.py
+        
+        rubygemsEnabled = false          // RubyGems
+        bundleAuditEnabled = false       // Ruby bundle-audit
+        
+        cocoapodsEnabled = false         // iOS CocoaPods
+        swiftEnabled = false             // Swift
+        swiftPackageResolvedEnabled = false // Swift PM
+        
+        cmakeEnabled = false             // C/C++ CMake
+        opensslEnabled = false           // OpenSSL
+
+        retirejs {
+        	enabled = false                  // JavaScript / RetireJS scanner
+    	}
+    	
+    	ossIndex {
+        	enabled = false                  // Sonatype OSS Index scanner
+    	}
+    }
+
+  	nvd {
         apiKey = providers.environmentVariable("NVD_API_KEY").getOrNull()
+        delay = 500		// Delay in MS between requests when an API key is active
     }
 }
 
