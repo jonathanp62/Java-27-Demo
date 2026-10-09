@@ -68,8 +68,6 @@ repositories {
 }
 
 dependencyCheck {
-	scanConfigurations = ['runtimeClasspath']
-
     analyzers {
         // --- Core File Analyzers ---
         archiveEnabled = false           // Skips zip/tar extraction
@@ -103,10 +101,16 @@ dependencyCheck {
     	}
     }
 
+    data {
+    	directory = "${System.getenv('HOME')}/OWASP/dependency-check-data"
+    }
+
   	nvd {
         apiKey = providers.environmentVariable("NVD_API_KEY").getOrNull()
         delay = 500		// Delay in MS between requests when an API key is active
     }
+
+    scanConfigurations = ['runtimeClasspath']
 }
 
 dependencies {
