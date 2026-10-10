@@ -64,8 +64,10 @@ public final class Main implements Runnable {
         this.handleCommandLineArguments();
 
         final LazyConstants lazyConstants = new LazyConstants();
+        final Primitives primitives = new Primitives();
 
         lazyConstants.demo();
+        primitives.demo();
 
         if (this.logger.isTraceEnabled()) {
             this.logger.trace(exit());
