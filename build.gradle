@@ -42,6 +42,7 @@ plugins {
 	id 'net.jmp.gradle.plugin.projectinfo-info'	version '0.3.0'
 	id 'net.ltgt.errorprone'					version '4.2.0'
 	id 'net.ltgt.nullaway'						version '2.3.0'
+	id 'org.owasp.dependencycheck'				version '13.0.0'
 }
 
 apply plugin: 'net.jmp.gradle.plugin.projectinfo-info'
@@ -64,6 +65,48 @@ java {
 repositories {
 	mavenLocal()
 	mavenCentral()
+}
+
+dependencyCheck {
+    analyzers {
+        // --- Core File Analyzers ---
+        archiveEnabled = false           // Skips zip/tar extraction
+        jarEnabled = true                // Keeps standard Java JAR inspection ON
+        centralEnabled = false           // Skips querying Maven Central API for missing metadata
+        
+        // --- Non-JVM Analyzers (Explicitly Disabled) ---
+        assemblyEnabled = false          // .NET assemblies
+        msbuildEnabled = false           // MSBuild
+        nuspecEnabled = false            // NuGet
+        
+        pyDistributionEnabled = false    // Python distribution files (.whl, .egg)
+        pyPackageEnabled = false         // Python requirements.txt / setup.py
+        
+        rubygemsEnabled = false          // RubyGems
+        bundleAuditEnabled = false       // Ruby bundle-audit
+        
+        cocoapodsEnabled = false         // iOS CocoaPods
+        swiftEnabled = false             // Swift
+        swiftPackageResolvedEnabled = false // Swift PM
+        
+        cmakeEnabled = false             // C/C++ CMake
+        opensslEnabled = false           // OpenSSL
+
+        retirejs {
+        	enabled = false                  // JavaScript / RetireJS scanner
+    	}
+    	
+    	ossIndex {
+        	enabled = false                  // Sonatype OSS Index scanner
+    	}
+    }
+
+  	nvd {
+        apiKey = providers.environmentVariable("NVD_API_KEY").getOrNull()
+        delay = 500		// Delay in MS between requests when an API key is active
+    }
+
+    scanConfigurations = ['runtimeClasspath']
 }
 
 dependencies {
