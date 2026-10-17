@@ -66,10 +66,12 @@ public final class Main implements Runnable {
         final LazyConstants lazyConstants = new LazyConstants();
         final Primitives primitives = new Primitives();
         final ISO8601 iso8601 = new ISO8601();
+        final StructuredConcurrency structuredConcurrency = new StructuredConcurrency();
 
         lazyConstants.demo();
         primitives.demo();
         iso8601.demo();
+        structuredConcurrency.demo();
 
         if (this.logger.isTraceEnabled()) {
             this.logger.trace(exit());
