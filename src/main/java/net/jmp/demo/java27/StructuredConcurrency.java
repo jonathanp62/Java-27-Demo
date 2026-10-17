@@ -29,8 +29,9 @@ package net.jmp.demo.java27;
  */
 
 import java.util.List;
+
 import java.util.concurrent.*;
-import java.util.function.BiConsumer;
+
 import java.util.function.Consumer;
 import java.util.function.ObjLongConsumer;
 
