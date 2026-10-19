@@ -144,7 +144,7 @@ final class StructuredConcurrency {
 
         try {
             final long start = System.currentTimeMillis();
-            final Dashboard dashboard = this.loadDashboardStructurally(this.userId, true);
+            final Dashboard dashboard = this.loadDashboardStructurallyWithCustomJoiner(this.userId, true);
             final long end = System.currentTimeMillis();
 
             this.logDuration.accept("Structured", end - start);
@@ -220,7 +220,7 @@ final class StructuredConcurrency {
     // @return                      net.jmp.demo.java27.StructuredConcurrency.Dashboard
     private Dashboard loadDashboardStructurally(final String id, final boolean isUserServiceDown) throws ExecutionException, InterruptedException {
         if (this.logger.isTraceEnabled()) {
-            this.logger.trace(entryWith(id));
+            this.logger.trace(entryWith(id, isUserServiceDown));
         }
 
         Dashboard dashboard = null;
@@ -228,8 +228,11 @@ final class StructuredConcurrency {
         // Default policy: wait for all subtasks to succeed or fail as soon
         // as one fails. close() runs at the end of the block whether we
         // returned or threw, and does not return until both threads are done.
+        // Specify the default joiner.
 
-        try (final StructuredTaskScope<Object, Void, ExecutionException> scope = StructuredTaskScope.open()) {
+        try (final StructuredTaskScope<Object, Void, ExecutionException> scope = StructuredTaskScope.open(
+                StructuredTaskScope.Joiner.awaitAllSuccessfulOrThrow()
+            )) {
             // Subtask, not Future. No blocking get(), no cancel().
             // Waiting and cancelling belong to the scope now.
 
@@ -244,6 +247,21 @@ final class StructuredConcurrency {
             // join() returned, so both succeeded and get() cannot fail.
             dashboard = new Dashboard(user.get(), orders.get());
         }
+
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace(exitWith(dashboard));
+        }
+
+        return dashboard;
+    }
+
+    /// Load the dashboard structurally using a custom joiner.
+    private Dashboard loadDashboardStructurallyWithCustomJoiner(final String id, final boolean isUserServiceDown) throws ExecutionException, InterruptedException {
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace(entryWith(id, isUserServiceDown));
+        }
+
+        final Dashboard dashboard = new Dashboard(new User("User"), new Orders(List.of("User's orders")));
 
         if (this.logger.isTraceEnabled()) {
             this.logger.trace(exitWith(dashboard));
