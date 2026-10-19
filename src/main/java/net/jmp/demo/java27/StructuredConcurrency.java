@@ -35,6 +35,8 @@ import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.ObjLongConsumer;
 
+import org.jspecify.annotations.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -144,6 +146,18 @@ final class StructuredConcurrency {
 
         try {
             final long start = System.currentTimeMillis();
+            final Dashboard dashboard = this.loadDashboardStructurallyWithCustomJoiner(this.userId, false);
+            final long end = System.currentTimeMillis();
+
+            this.logDuration.accept("Structured", end - start);
+            this.logDashboard.accept(dashboard);
+        } catch (final Exception e) {
+            this.logger.error("loadDashboardStructurally exception: ", e);
+            Thread.currentThread().interrupt();
+        }
+
+        try {
+            final long start = System.currentTimeMillis();
             final Dashboard dashboard = this.loadDashboardStructurallyWithCustomJoiner(this.userId, true);
             final long end = System.currentTimeMillis();
 
@@ -231,8 +245,8 @@ final class StructuredConcurrency {
         // Specify the default joiner.
 
         try (final StructuredTaskScope<Object, Void, ExecutionException> scope = StructuredTaskScope.open(
-                StructuredTaskScope.Joiner.awaitAllSuccessfulOrThrow()
-            )) {
+                StructuredTaskScope.Joiner.awaitAllSuccessfulOrThrow())
+        ) {
             // Subtask, not Future. No blocking get(), no cancel().
             // Waiting and cancelling belong to the scope now.
 
@@ -261,7 +275,16 @@ final class StructuredConcurrency {
             this.logger.trace(entryWith(id, isUserServiceDown));
         }
 
-        final Dashboard dashboard = new Dashboard(new User("User"), new Orders(List.of("User's orders")));
+        Dashboard dashboard = null;
+
+        try (final StructuredTaskScope<Object, Dashboard, ExecutionException> scope = StructuredTaskScope.open(
+                new DashboardJoiner())
+        ) {
+            scope.fork(() -> findUser(id, isUserServiceDown));
+            scope.fork(() -> fetchOrders(id));
+
+            dashboard = scope.join();
+        }
 
         if (this.logger.isTraceEnabled()) {
             this.logger.trace(exitWith(dashboard));
@@ -293,5 +316,54 @@ final class StructuredConcurrency {
         }
 
         return new Orders(List.of("Something Else"));
+    }
+
+    // A custom Joiner implementing Java 27 specs
+    // <T> subtask type, <R> scope.join() return type, <R_X> exception type
+    static class DashboardJoiner implements StructuredTaskScope.Joiner<Object, Dashboard, ExecutionException> {
+        // Internal state to hold completed subtask data
+        private @Nullable User capturedUser;
+        private @Nullable Orders capturedOrders;
+        private @Nullable Throwable failure;
+
+        @Override
+        public boolean onComplete(StructuredTaskScope.Subtask<Object> subtask) {
+            if (subtask.state() == StructuredTaskScope.Subtask.State.SUCCESS) {
+                final Object result = subtask.get();
+
+                // Dynamically identify the data type as it arrives
+
+                if (result instanceof User u) {
+                    this.capturedUser = u;
+                } else if (result instanceof Orders o) {
+                    this.capturedOrders = o;
+                }
+            } else if (subtask.state() == StructuredTaskScope.Subtask.State.FAILED) {
+                this.failure = subtask.exception();
+
+                return true;    // Short-circuit: cancel all other tasks immediately on failure
+            }
+
+            return false;       // Keep waiting for other tasks
+        }
+
+        @Override
+        public Dashboard result() throws ExecutionException {
+            // This is invoked by scope.join() to produce the final object
+            if (this.failure != null) {
+                throw new ExecutionException("Dashboard compilation failed", failure);
+            }
+
+            if (this.capturedUser == null || capturedOrders == null) {
+                throw new ExecutionException("Required metrics were missing", null);
+            }
+
+            return new Dashboard(this.capturedUser, this.capturedOrders);
+        }
+
+        @Override
+        public Dashboard timeout() throws ExecutionException {
+            throw new ExecutionException("Scope timed out fetching dashboard details", null);
+        }
     }
 }
