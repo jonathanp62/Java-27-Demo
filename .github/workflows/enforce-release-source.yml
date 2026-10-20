@@ -1,0 +1,28 @@
+# (#)enforce-release-source.yml 0.1.0   10/06/2026
+#
+# @author   Jonathan Parker
+# @version  0.1.0
+# @since    0.1.0
+#
+# Copyright (c) 2026 by Jonathan Parker. MIT license.
+#
+# This workflow prevents unauthorized merges to the main branch
+
+name: "Enforce Release-Only Merges"
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-source-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify that source branch is a release branch
+        # This checks if the source branch starts with 'release/'
+        if: ${{ !startsWith(github.head_ref, 'release/') && !startsWith(github.head_ref, 'releases/') }}
+        run: |
+          echo "ERROR: You can only merge into 'main' from a 'release/*' or 'releases/*' branch."
+          echo "Current source branch is: ${{ github.head_ref }}"
+          exit 1
